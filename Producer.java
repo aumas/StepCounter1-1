@@ -1,59 +1,49 @@
-package magicfour.stepcounter1_1;
-
+package edu.uiowa.dichha.stepcounter1_1;
 import android.hardware.Sensor;
 import android.util.Log;
-
-import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 
 /**
- * Created by aumas on 2016/9/18.
+ * Created by raidi01 on 9/20/2016.
  */
-public class Producer implements Runnable {
+public class Producer implements Runnable{
     private float axis[];
     private float timestamp;
     private int type;
-    private BlockingQueue<Sensor_Data> queue;
+    private BlockingQueue<Sensor_Data> shared_queue;
     private static String PROD = "PRODUCER";
-    private static final Producer instance = new Producer();
+    private static String PROD_DATA = "PRODUCER_DATA";
 
-    private Producer(){
-        //used for singleton
-    }
-    public static Producer get_instance(){
-        return instance;
-    }
-
-    public Producer(BlockingQueue<Sensor_Data> q,
-                    int type,
-                    float axis[],
-                    float timestamp) {
+    public Producer(BlockingQueue<Sensor_Data> shared_queue,int type,float axis[], float timestamp){
+        this.shared_queue = shared_queue;
         this.type = type;
-        this.queue = q;
         this.axis = axis;
         this.timestamp = timestamp;
     }
-
     @Override
-    public void run() {
+    public void run(){
         try{
-            queue.put(produce(type,axis,timestamp));
-            Log.i(PROD,"Producing");
-        }catch (InterruptedException ex){
-        //handle the exception
-        }
-    }
+            Log.i(PROD, "Producing");
+            Sensor_Data sensor_data = produce(type, axis, timestamp);
+            Log.i(PROD_DATA, sensor_data.toString());
+            shared_queue.put(sensor_data);
 
-    public Sensor_Data produce(int type, float axis[], float timestamp){
+        }catch (InterruptedException ex){
+            //handle the exception
+        }
+
+    }
+    public static Sensor_Data produce(int type, float axis[], float timestamp){
         Sensor_Data sensor_data;
-        if (type == Sensor.TYPE_ACCELEROMETER) {
+        if(type == Sensor.TYPE_ACCELEROMETER){
             sensor_data = new Accelerometer_Data(axis, timestamp);
-        }else if (type == Sensor.TYPE_GYROSCOPE) {
-            sensor_data = new Gyroscopes_Data(axis, timestamp);
+        }else if(type == Sensor.TYPE_GYROSCOPE){
+            sensor_data = new Gyroscope_Data(axis, timestamp);
         }else{
             sensor_data = null;
         }
 
         return sensor_data;
     }
+
 }

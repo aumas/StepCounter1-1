@@ -1,72 +1,72 @@
-package magicfour.stepcounter1_1;
+package edu.uiowa.dichha.stepcounter1_1;
 
-import android.app.Application;
-import android.app.Service;
 import android.content.Context;
 import android.os.Environment;
-import android.os.Message;
 import android.util.Log;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
+import java.io.ObjectOutputStream;
 import java.util.concurrent.BlockingQueue;
 
 /**
- * Created by aumas on 2016/9/18.
+ * Created by raidi01 on 9/20/2016.
  */
-public class Consumer implements  Runnable{
-    private BlockingQueue<Sensor_Data> queue;
+public class Consumer implements Runnable{
+    private BlockingQueue<Sensor_Data> shared_queue;
     private Context context;
-    private static final String CONS ="CONSUMER";
-    private static final String PATH = Environment.getExternalStorageDirectory().getAbsolutePath()+"/accelerometer";
+    private static final String CONS = "CONSUMER";
+    private static final String CONS_DATA = "CONSUMER_DATA";
+    private static final String PATH_NAME = "PATH_NAME";
+
+    //private static final String PATH = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Accelerometer";
+    //private String saveFileName = "sensorData.txt";
+
     private File file;
-    private static final Consumer consumer = new Consumer();
-
-    private Consumer(){
-        //Singleton
-    }
-    public static Consumer get_instance(){
-        return consumer;
-    }
-
-    public Consumer(BlockingQueue<Sensor_Data> queue,Context context) {
-        this.queue = queue;
+    public Consumer(BlockingQueue<Sensor_Data> shared_queue, Context context){
+        this.shared_queue = shared_queue;
         this.context = context;
-        file = new File(PATH + "/acc.txt");
+        //file = new File(PATH + "/acc1.txt");
     }
 
     @Override
-    public void run() {
-        Sensor_Data sensor_Data = queue.poll();
-            if(sensor_Data == null){
-            }else{
-                //write to file
-                Log.i(CONS,sensor_Data.toString());
-                String saveText = String.valueOf(sensor_Data.toString());
-                save(saveText);
-            }
-    }
-
-    public void save(String saveText)
-    {
+    public void run(){
+        Sensor_Data sensor_data = null;
         try {
-            FileOutputStream outStream= context.openFileOutput("acc3.txt",Context.MODE_APPEND);
-            outStream.write(saveText.getBytes());
-            outStream.close();
-            Log.i(CONS, outStream.toString());
-            Log.i(CONS, "SAVE DATA");
-            Log.i(CONS,saveText);
-        } catch (FileNotFoundException e) {
+            sensor_data = shared_queue.take();//retrieves and removes the head of this shared_queue
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        catch (IOException e){
+        if(sensor_data == null){
+
+        }else{
+            Log.i(CONS, "Consuming");
+            Log.i(CONS_DATA, sensor_data.toString());
+            String saveText = String.valueOf(sensor_data.toString());
+            save(saveText);
+        }
+    }
+    public void save(String saveText){
+        try{
+            FileOutputStream outStream = context.openFileOutput("acc1.txt", Context.MODE_APPEND);
+            //Log.i("path_test0", String.valueOf(context.getFileStreamPath("acc1.txt")));
+            outStream.write(saveText.getBytes());
+            //flush the content to the underlying stream
+            //outStream.flush();
+            outStream.close();
+
+
+            Log.i(CONS, outStream.toString());
+            Log.i(CONS, "SAVE DATA");
+            Log.i(CONS, saveText);
+            //Log.i(PATH_NAME, file.getPath());
+
+        }catch(FileNotFoundException e){
+
+
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
